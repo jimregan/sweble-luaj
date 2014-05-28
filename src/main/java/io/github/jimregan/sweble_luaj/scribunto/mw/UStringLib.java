@@ -19,7 +19,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package org.luaj.vm2.lib;
+package io.github.jimregan.sweble_luaj.scribunto.mw;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +31,9 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.DumpState;
+import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.PackageLib;
+import org.luaj.vm2.lib.VarArgFunction;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code string} 
@@ -59,11 +62,11 @@ import org.luaj.vm2.compiler.DumpState;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
  */
-public class StringLib extends OneArgFunction {
+public class UStringLib extends OneArgFunction {
 
 	public static LuaTable instance;
 	
-	public StringLib() {
+	public UStringLib() {
 	}
 
 	public LuaValue call(LuaValue arg) {
@@ -74,11 +77,13 @@ public class StringLib extends OneArgFunction {
 			"byte", "char", "find", "format", 
 			"gmatch", "gsub", "match", "rep", 
 			"sub"} );
-		env.set("string", t);
+		//FIXME
+//		env.set("string", t);
 		instance = t;
 		if ( LuaString.s_metatable == null )
 			LuaString.s_metatable = tableOf( new LuaValue[] { INDEX, t } );
-		PackageLib.instance.LOADED.set("string", t);
+		//FIXME
+//		PackageLib.instance.LOADED.set("string", t);
 		return t;
 	}
 	
@@ -86,7 +91,7 @@ public class StringLib extends OneArgFunction {
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) { 
 			case 0: return dump(arg); // dump (function)
-			case 1: return StringLib.len(arg); // len (function)
+			case 1: return UStringLib.len(arg); // len (function)
 			case 2: return lower(arg); // lower (function)
 			case 3: return reverse(arg); // reverse (function)
 			case 4: return upper(arg); // upper (function)
@@ -98,15 +103,15 @@ public class StringLib extends OneArgFunction {
 	static final class StringLibV extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
-			case 0: return StringLib.byte_( args );
-			case 1: return StringLib.char_( args );
-			case 2: return StringLib.find( args );
-			case 3: return StringLib.format( args );
-			case 4: return StringLib.gmatch( args );
-			case 5: return StringLib.gsub( args );
-			case 6: return StringLib.match( args );
-			case 7: return StringLib.rep( args );
-			case 8: return StringLib.sub( args );
+			case 0: return UStringLib.byte_( args );
+			case 1: return UStringLib.char_( args );
+			case 2: return UStringLib.find( args );
+			case 3: return UStringLib.format( args );
+			case 4: return UStringLib.gmatch( args );
+			case 5: return UStringLib.gsub( args );
+			case 6: return UStringLib.match( args );
+			case 7: return UStringLib.rep( args );
+			case 8: return UStringLib.sub( args );
 			}
 			return NONE;
 		}
@@ -603,7 +608,7 @@ public class StringLib extends OneArgFunction {
 				break;
 		}
 		lbuf.append( src.substring( soffset, srclen ) );
-		return varargsOf(lbuf.tostring(), valueOf(n));
+		return varargsOf(lbuf.tostring(), LuaValue.valueOf(n));
 	}
 	
 	/** 
@@ -708,7 +713,7 @@ public class StringLib extends OneArgFunction {
 	 * The definition of what a lowercase letter is depends on the current locale.	
 	 */
 	static LuaValue upper( LuaValue arg ) {
-		return valueOf(arg.checkjstring().toUpperCase());
+		return LuaString.valueOf(arg.checkjstring().toUpperCase());
 	}
 	
 	/**
