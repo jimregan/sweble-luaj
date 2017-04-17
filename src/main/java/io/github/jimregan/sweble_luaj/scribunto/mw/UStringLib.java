@@ -34,6 +34,7 @@ import org.luaj.vm2.compiler.DumpState;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.VarArgFunction;
+import java.text.Normalizer;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code string} 
@@ -618,11 +619,11 @@ public class UStringLib extends OneArgFunction {
 	 * Embedded zeros are counted, so "a\000bc\000" has length 5. 
 	 */
 	static LuaValue len( LuaValue arg ) {
-		return arg.checkstring().len();
+		return LuaValue.valueOf(arg.checkjstring().length());
 	}
 
 	/** 
-	 * string.lower (s)
+	 * ustring.lower (s)
 	 * 
 	 * Receives a string and returns a copy of this string with all uppercase letters 
 	 * changed to lowercase. All other characters are left unchanged. 
@@ -646,35 +647,45 @@ public class UStringLib extends OneArgFunction {
 	}
 	
 	/**
-	 * string.rep (s, n)
+	 * ustring.rep (s, n)
 	 * 
 	 * Returns a string that is the concatenation of n copies of the string s. 
 	 */
-	static Varargs rep( Varargs args ) {
-		LuaString s = args.checkstring( 1 );
-		int n = args.checkint( 2 );
-		final byte[] bytes = new byte[ s.length() * n ];
-		int len = s.length();
-		for ( int offset = 0; offset < bytes.length; offset += len ) {
-			s.copyInto( 0, bytes, offset, len );
+	static Varargs rep(Varargs args) {
+		String s = args.checkjstring(1);
+		String ret = "";
+		int n = args.checkint(2);
+		for(int i = 0; i < n; i++) {
+			ret += s;
 		}
-		return LuaString.valueOf( bytes );
+		return LuaString.valueOf(ret);
 	}
 
 	/** 
-	 * string.reverse (s)
+	 * ustring.reverse (s)
 	 * 
-	 * Returns a string that is the string s reversed. 
+	 * Returns a string that is the string s reversed.
+	 * Using StringBuffer's reverse() should handle combining characters
+	 * Unfortunately, it turns out Scribunto doesn't include this, so it won't be used
 	 */
-	static LuaValue reverse( LuaValue arg ) {		
-		LuaString s = arg.checkstring();
-		int n = s.length();
-		byte[] b = new byte[n];
-		for ( int i=0, j=n-1; i<n; i++, j-- )
-			b[j] = (byte) s.luaByte(i);
-		return LuaString.valueOf( b );
+	static LuaValue reverse(LuaValue arg) {
+		String s = arg.checkjstring(1);
+		StringBuffer sb = new StringBuffer(s);
+		StringBuffer rev = sb.reverse();
+		return LuaString.valueOf(rev.toString());
 	}
 
+	/**
+	 * ustring.toNFD (s)
+	 * 
+	 * Returns a string containing the NFD form of the string
+	 */
+	static LuaValue toNFD(LuaValue arg) {
+		String s = arg.checkjstring(1);
+		String norm = Normalizer.normalize(s, Normalizer.Form.NFD);
+		return LuaString.valueOf(norm);
+	}
+	
 	/** 
 	 * string.sub (s, i [, j])
 	 * 
@@ -715,7 +726,7 @@ public class UStringLib extends OneArgFunction {
 	static LuaValue upper( LuaValue arg ) {
 		return LuaString.valueOf(arg.checkjstring().toUpperCase());
 	}
-	
+		
 	/**
 	 * This utility method implements both string.find and string.match.
 	 */
